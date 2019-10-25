@@ -15,7 +15,7 @@ fn triang(x: u32, y: u32) -> bool {
 }
 
 fn square(x: u32, y: u32) -> bool {
-    if (x > 200) & (x < 300) & (y > 200) & (y < 300) {
+    if (x > 200) & (x < 300) & (y > 100) & (y < 400) {
         true
     } else {
         false
@@ -87,6 +87,12 @@ struct LinePair {
     s_line: Line,
 }
 
+fn distatance(p1: &Vector, p2: &Vector, X: &Vector) -> f32 {
+    let dist = ((p2.y - p1.y) * X.x - (p2.x - p1.x) * X.y + p2.x * p1.y - p2.y * p1.x).abs()
+        / ((p2.y - p1.y).powi(2) + (p2.x - p1.x).powi(2)).sqrt();
+    dist
+}
+
 fn warpy<'a>(
     line_pairs: &'a mut Vec<LinePair>,
     source: &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
@@ -113,18 +119,23 @@ fn warpy<'a>(
                     .perpendicular()
                     .mul(v / lp.s_line.q.dist2(lp.s_line.p).sqrt());
             let D = X_new - X;
-            let weight = 1.0;
+            let a = 0.001;
+            let p = 0;
+            let b = 2;
+            let lenght = ((lp.t_line.q - lp.t_line.p) * (lp.t_line.q - lp.t_line.p)).sqrt();
+            let dist = distatance(&lp.t_line.p, &lp.t_line.q, &X);
+            let weight = (lenght.powi(p) / (a + dist)).powi(b);
             dsum = dsum + D.mul(weight);
             weightsum += weight;
         }
         let X_new = X + dsum.mul(1.0 / weightsum);
         println!("{:?}", &X_new);
         // TODO: fix sizes
-        if (X_new.x <= 800.0) & (X_new.x >= 0.0) & (X_new.y <= 800.0) & (X_new.y >= 0.0) {
+        if (X_new.x <= 799.0) & (X_new.x >= 0.0) & (X_new.y <= 799.0) & (X_new.y >= 0.0) {
             let t_pixel = source.get_pixel(X_new.x.floor() as u32, X_new.y.floor() as u32);
             *pixel = t_pixel.clone();
         } else {
-            *pixel = image::Rgb([0, 0, 0]);
+            // *pixel = image::Rgb([0, 0, 0]);
         }
     }
 
@@ -167,22 +178,22 @@ fn main() {
     let mut lp = vec![
         LinePair {
             t_line: Line {
-                p: Vector { x: 200.0, y: 100.0 },
-                q: Vector { x: 200.0, y: 200.0 },
+                p: Vector { x: 400.0, y: 500.0 },
+                q: Vector { x: 400.0, y: 520.0 },
             },
             s_line: Line {
-                p: Vector { x: 200.0, y: 100.0 },
-                q: Vector { x: 220.0, y: 200.0 },
+                p: Vector { x: 200.0, y: 500.0 },
+                q: Vector { x: 200.0, y: 550.0 },
             },
         },
         LinePair {
             t_line: Line {
-                p: Vector { x: 100.0, y: 100.0 },
-                q: Vector { x: 100.0, y: 200.0 },
+                p: Vector { x: 400.0, y: 520.0 },
+                q: Vector { x: 500.0, y: 530.0 },
             },
             s_line: Line {
-                p: Vector { x: 200.0, y: 200.0 },
-                q: Vector { x: 300.0, y: 200.0 },
+                p: Vector { x: 200.0, y: 500.0 },
+                q: Vector { x: 200.0, y: 550.0 },
             },
         },
     ];
