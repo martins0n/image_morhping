@@ -87,7 +87,7 @@ struct LinePair {
     s_line: Line,
 }
 
-fn morphy<'a>(
+fn warpy<'a>(
     line_pairs: &'a mut Vec<LinePair>,
     source: &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
     target: &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
@@ -187,7 +187,7 @@ fn main() {
         },
     ];
 
-    let (a, b) = morphy(&mut lp, &mut imgbufsource, &mut imgbufdestination);
+    let (a, b) = warpy(&mut lp, &mut imgbufsource, &mut imgbufdestination);
     a.save("./data/source_source.png").unwrap();
     b.save("./data/target_source.png").unwrap();
 }
