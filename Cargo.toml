@@ -1,5 +1,5 @@
 [package]
-name = "hello_world"
+name = "image_morphing"
 version = "0.1.0"
 
 [dependencies]
