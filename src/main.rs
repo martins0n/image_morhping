@@ -7,7 +7,7 @@ use std::ops::Mul;
 use std::ops::Sub;
 
 fn triang(x: u32, y: u32) -> bool {
-    if (x > 200) & (x < 600) & (y > 300) & (y < 600) {
+    if (x > 200) & (x < 400) & (y > 300) & (y < 600) {
         true
     } else {
         false
@@ -15,7 +15,7 @@ fn triang(x: u32, y: u32) -> bool {
 }
 
 fn square(x: u32, y: u32) -> bool {
-    if (x > 200) & (x < 300) & (y > 100) & (y < 400) {
+    if (x > 200) & (x < 300) & (y > 100) & (y < 200) {
         true
     } else {
         false
@@ -94,7 +94,7 @@ fn distatance(p1: &Vector, p2: &Vector, X: &Vector) -> f32 {
 }
 
 fn warpy<'a>(
-    line_pairs: &'a mut Vec<LinePair>,
+    line_pairs: &'a Vec<LinePair>,
     source: &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
     target: &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
 ) -> (
@@ -135,7 +135,7 @@ fn warpy<'a>(
             let t_pixel = source.get_pixel(X_new.x.floor() as u32, X_new.y.floor() as u32);
             *pixel = t_pixel.clone();
         } else {
-            // *pixel = image::Rgb([0, 0, 0]);
+            *pixel = image::Rgb([255, 255, 255]);
         }
     }
 
@@ -169,36 +169,38 @@ fn main() {
             *pixel = image::Rgb([r, 0, b]);
         } else {
             *pixel = image::Rgb([0, 0, 0]);
-        }
+        } 
     }
 
     imgbufsource.save("./data/source.png").unwrap();
-    imgbufdestination.save("./data/destination.png").unwrap();
+    imgbufdestination.save("./dKDTreeata/destination.png").unwrap();
 
-    let mut lp = vec![
+    let lp = vec![
         LinePair {
             t_line: Line {
-                p: Vector { x: 400.0, y: 500.0 },
-                q: Vector { x: 400.0, y: 520.0 },
+                p: Vector { x: 100.0, y: 100.0 },
+                q: Vector { x: 100.0, y: 200.0 },
             },
             s_line: Line {
-                p: Vector { x: 200.0, y: 500.0 },
-                q: Vector { x: 200.0, y: 550.0 },
+                p: Vector { x: 100.0, y: 100.0 },
+                q: Vector { x: 100.0, y: 200.0 },
             },
         },
         LinePair {
             t_line: Line {
-                p: Vector { x: 400.0, y: 520.0 },
-                q: Vector { x: 500.0, y: 530.0 },
+                p: Vector { x: 100.0, y: 200.0 },
+                q: Vector { x: 200.0, y: 200.0 },
             },
             s_line: Line {
-                p: Vector { x: 200.0, y: 500.0 },
-                q: Vector { x: 200.0, y: 550.0 },
+                p: Vector { x: 100.0, y: 200.0 },
+                q: Vector { x: 200.0, y: 250.0 },
             },
         },
     ];
+        
+    let (a, b) = warpy(&lp, &mut imgbufsource, &mut imgbufdestination);
 
-    let (a, b) = warpy(&mut lp, &mut imgbufsource, &mut imgbufdestination);
+    
     a.save("./data/source_source.png").unwrap();
     b.save("./data/target_source.png").unwrap();
 }
