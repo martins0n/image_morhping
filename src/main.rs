@@ -6,6 +6,9 @@ use std::ops::Add;
 use std::ops::Mul;
 use std::ops::Sub;
 
+
+
+
 fn triang(x: u32, y: u32) -> bool {
     if (x > 200) & (x < 400) & (y > 300) & (y < 600) {
         true
@@ -15,7 +18,7 @@ fn triang(x: u32, y: u32) -> bool {
 }
 
 fn square(x: u32, y: u32) -> bool {
-    if (x > 200) & (x < 300) & (y > 100) & (y < 200) {
+    if (x > 100) & (x < 150) & (y > 100) & (y < 130) {
         true
     } else {
         false
@@ -77,6 +80,7 @@ impl Vector {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 struct Line {
     p: Vector,
     q: Vector,
@@ -87,6 +91,15 @@ struct LinePair {
     s_line: Line,
 }
 
+impl LinePair {
+    fn swap_lines(&self) -> Self{
+        LinePair{
+            t_line: self.s_line,
+            s_line: self.t_line
+        }
+    }
+}
+
 fn distatance(p1: &Vector, p2: &Vector, X: &Vector) -> f32 {
     let dist = ((p2.y - p1.y) * X.x - (p2.x - p1.x) * X.y + p2.x * p1.y - p2.y * p1.x).abs()
         / ((p2.y - p1.y).powi(2) + (p2.x - p1.x).powi(2)).sqrt();
@@ -95,13 +108,14 @@ fn distatance(p1: &Vector, p2: &Vector, X: &Vector) -> f32 {
 
 fn warpy<'a>(
     line_pairs: &'a Vec<LinePair>,
-    source: &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
-    target: &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
-) -> (
-    &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
-    &'a mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
-) {
-    for (x, y, pixel) in target.enumerate_pixels_mut() {
+    source: &'a  image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+    target: &'a  image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+) -> image::ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+    
+    let (imgx, imgy) = target.dimensions();
+    let mut warpy_target: image::ImageBuffer<image::Rgb<u8>, _> =
+        image::ImageBuffer::new(imgx, imgy);
+    for (x, y, pixel) in warpy_target.enumerate_pixels_mut() {
         let mut dsum = Vector { x: 0.0, y: 0.0 };
         let mut weightsum = 0.0;
         let X = Vector {
@@ -129,9 +143,8 @@ fn warpy<'a>(
             weightsum += weight;
         }
         let X_new = X + dsum.mul(1.0 / weightsum);
-        println!("{:?}", &X_new);
-        // TODO: fix sizes
-        if (X_new.x <= 799.0) & (X_new.x >= 0.0) & (X_new.y <= 799.0) & (X_new.y >= 0.0) {
+
+        if (X_new.x <= (imgx - 1) as f32) & (X_new.x >= 0.0) & (X_new.y <= (imgy - 1) as f32) & (X_new.y >= 0.0) {
             let t_pixel = source.get_pixel(X_new.x.floor() as u32, X_new.y.floor() as u32);
             *pixel = t_pixel.clone();
         } else {
@@ -139,13 +152,36 @@ fn warpy<'a>(
         }
     }
 
-    (source, target)
+    warpy_target
 }
 
-fn main() {
+fn cross_dissolve<'a>(
+    source_image:  &'a  image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+    image_after_warm: &'a  image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+    delta: f32
+) -> Vec<image::ImageBuffer<image::Rgb<u8>, Vec<u8>>> {
+    let iterations = (1.0 / delta) as i32;
+    let mut cd_images = Vec::<image::ImageBuffer<image::Rgb<u8>, Vec<u8>>>::new();
+    let (imgx, imgy) = source_image.dimensions();
+    for i in 0..iterations {
+    
+        let mut temp_image: image::ImageBuffer<image::Rgb<u8>, _> = image::ImageBuffer::new(imgx, imgy);
+        for (x, y, pixel) in temp_image.enumerate_pixels_mut() {
+            let si_pixel = source_image.get_pixel(x,y);
+            let iaw_pixel = image_after_warm.get_pixel(x,y);
+            let r = (si_pixel[0] as f32 + i as f32 * delta * (iaw_pixel[0] as f32 - si_pixel[0] as f32)) as u8;
+            let g = (si_pixel[1] as f32 + i as f32 * delta * (iaw_pixel[1] as f32 - si_pixel[1] as f32)) as u8;
+            let b = (si_pixel[2] as f32 + i as f32 * delta * (iaw_pixel[2] as f32 - si_pixel[2] as f32)) as u8;
+            *pixel = image::Rgb([r, g, b]);
+        }
+        cd_images.push(temp_image);
+    }   
+    cd_images
+}
+
+fn test_with_simple_polygons() {
     let imgx = 800;
     let imgy = 800;
-
     let mut imgbufdestination: image::ImageBuffer<image::Rgb<u8>, _> =
         image::ImageBuffer::new(imgx, imgy);
 
@@ -173,7 +209,7 @@ fn main() {
     }
 
     imgbufsource.save("./data/source.png").unwrap();
-    imgbufdestination.save("./dKDTreeata/destination.png").unwrap();
+    imgbufdestination.save("./data/destination.png").unwrap();
 
     let lp = vec![
         LinePair {
@@ -197,10 +233,23 @@ fn main() {
             },
         },
     ];
-        
-    let (a, b) = warpy(&lp, &mut imgbufsource, &mut imgbufdestination);
+    let inv_lp = lp.iter().map(|x| x.swap_lines()).collect();
+    let a = warpy(&lp, &imgbufsource, &imgbufdestination);
+    let b = warpy(&inv_lp, &imgbufdestination, &imgbufsource);
+    a.save("./data/target_source.png").unwrap();
+    b.save("./data/source_target.png").unwrap();
+    let vec_images = cross_dissolve(&imgbufsource, &a, 0.1);
+    let mut i = 0;
+    for _image in vec_images.iter(){
+        _image.save(format!("./data/target_source_{}.png", i)).unwrap();
+        i += 1;
+    }
 
-    
-    a.save("./data/source_source.png").unwrap();
-    b.save("./data/target_source.png").unwrap();
+
+}
+
+
+
+fn main() {
+    test_with_simple_polygons()
 }
