@@ -2,18 +2,21 @@
 extern crate image;
 
 mod line_pair;
-use line_pair::{LinePair, Vector, distatance, Line, triang, square};
+use line_pair::{distatance, square, triang, Line, LinePair, Vector};
 
 fn warpy<'a>(
     line_pairs: &'a Vec<LinePair>,
     source: &'a image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
     target: &'a image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
-    degree: f32
+    degree: f32,
 ) -> image::ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let (imgx, imgy) = target.dimensions();
     let mut warpy_target: image::ImageBuffer<image::Rgb<u8>, _> =
         image::ImageBuffer::new(imgx, imgy);
-    let line_pairs_mod: Vec<LinePair> = line_pairs.iter().map(|x| x.turn_to_degree(degree)).collect();
+    let line_pairs_mod: Vec<LinePair> = line_pairs
+        .iter()
+        .map(|x| x.turn_to_degree(degree))
+        .collect();
     for (x, y, pixel) in warpy_target.enumerate_pixels_mut() {
         let mut dsum = Vector { x: 0.0, y: 0.0 };
         let mut weightsum = 0.0;

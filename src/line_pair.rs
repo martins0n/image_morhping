@@ -77,8 +77,8 @@ impl Vector {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Line {
-   pub p: Vector,
-   pub q: Vector,
+    pub p: Vector,
+    pub q: Vector,
 }
 
 pub struct LinePair {
@@ -100,7 +100,7 @@ impl LinePair {
                 s_line: self.s_line,
                 t_line: self.t_line,
             }
-        }else{
+        } else {
             let mut new_t_line = self.s_line;
             new_t_line.p = self.s_line.p + (self.s_line.p - self.t_line.p).mul(degree);
             new_t_line.q = self.s_line.q + (self.s_line.q - self.t_line.q).mul(degree);
@@ -108,7 +108,6 @@ impl LinePair {
                 s_line: self.s_line,
                 t_line: new_t_line,
             }
-
         }
     }
 }
