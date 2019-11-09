@@ -1,4 +1,5 @@
 extern crate num_complex;
+extern crate serde;
 
 use std::ops::Add;
 use std::ops::Mul;
@@ -20,7 +21,7 @@ pub fn square(x: u32, y: u32) -> bool {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Vector {
     pub x: f32,
     pub y: f32,
@@ -75,12 +76,13 @@ impl Vector {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Line {
     pub p: Vector,
     pub q: Vector,
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct LinePair {
     pub t_line: Line,
     pub s_line: Line,

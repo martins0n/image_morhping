@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 extern crate image;
+extern crate serde_json;
 
 mod line_pair;
 use line_pair::{distatance, square, triang, Line, LinePair, Vector};
@@ -145,6 +146,8 @@ fn test_with_simple_polygons() {
             },
         },
     ];
+    let serialized = serde_json::to_string(&lp).unwrap();
+    println!("serialized = {}", serialized);
     let inv_lp = lp.iter().map(|x| x.swap_lines()).collect();
     let a = warpy(&lp, &imgbufsource, &imgbufdestination, 0.5);
     let b = warpy(&inv_lp, &imgbufdestination, &imgbufsource, 0.5);
