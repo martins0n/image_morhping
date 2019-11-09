@@ -82,7 +82,7 @@ pub struct Line {
     pub q: Vector,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct LinePair {
     pub t_line: Line,
     pub s_line: Line,
