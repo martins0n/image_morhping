@@ -5,11 +5,10 @@ extern crate serde_json;
 mod line_pair;
 mod warpy;
 
+use line_pair::{square, triang, Line, LinePair, Vector};
 use std::fs::File;
 use std::path::Path;
-use line_pair::{square, triang, Line, LinePair, Vector};
 use warpy::{cross_dissolve, warpy};
-
 
 fn test_with_simple_polygons() {
     let imgx = 800;
@@ -81,13 +80,19 @@ fn test_with_simple_polygons() {
     }
 }
 
-fn warp_joker(){
+fn warp_joker() {
     let json_file_path = Path::new("./data/pairs.json");
     let json_file = File::open(json_file_path).expect("file not found");
     let lp: Vec<LinePair> = serde_json::from_reader(json_file).expect("error while reading json");
-    
-    let mut imgbufdestination: image::ImageBuffer<image::Rgb<u8>, _> = image::open(Path::new("./data/gg/ua881bcd690deuh59y75x.jpg")).unwrap().to_rgb();
-    let mut imgbufsource: image::ImageBuffer<image::Rgb<u8>, _> = image::open(Path::new("./data/gg/iphone360_9144.jpg")).unwrap().to_rgb();
+
+    let mut imgbufdestination: image::ImageBuffer<image::Rgb<u8>, _> =
+        image::open(Path::new("./data/gg/ua881bcd690deuh59y75x.jpg"))
+            .unwrap()
+            .to_rgb();
+    let mut imgbufsource: image::ImageBuffer<image::Rgb<u8>, _> =
+        image::open(Path::new("./data/gg/iphone360_9144.jpg"))
+            .unwrap()
+            .to_rgb();
     let inv_lp = lp.iter().map(|x| x.swap_lines()).collect();
     let a = warpy(&lp, &imgbufsource, &imgbufdestination, 1.0);
     let b = warpy(&inv_lp, &imgbufsource, &imgbufdestination, 1.0);
@@ -101,8 +106,8 @@ fn warp_joker(){
             .unwrap();
         i += 1;
     }
-  
-  //  b.save("./data/source_target.png").unwrap();
+
+    //  b.save("./data/source_target.png").unwrap();
 }
 
 fn main() {
