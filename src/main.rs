@@ -1,14 +1,16 @@
 #![allow(dead_code)]
+extern crate gif;
 extern crate image;
 extern crate serde_json;
 
 mod line_pair;
 mod warpy;
 
+use gif::{Encoder, Frame, Repeat, SetParameter};
 use line_pair::{square, triang, Line, LinePair, Vector};
 use std::fs::File;
 use std::path::Path;
-use warpy::{cross_dissolve, warpy};
+use warpy::{cross_dissolve, morphy, warpy};
 
 fn test_with_simple_polygons() {
     let imgx = 800;
@@ -110,6 +112,38 @@ fn warp_joker() {
     //  b.save("./data/source_target.png").unwrap();
 }
 
+fn morphy_test() {
+    let json_file_path = Path::new("./data/pairs.json");
+    let json_file = File::open(json_file_path).expect("file not found");
+    let lp: Vec<LinePair> = serde_json::from_reader(json_file).expect("error while reading json");
+
+    let imgbufdestination: image::ImageBuffer<image::Rgb<u8>, _> =
+        image::open(Path::new("./data/gg/ua881bcd690deuh59y75x.jpg"))
+            .unwrap()
+            .to_rgb();
+    let imgbufsource: image::ImageBuffer<image::Rgb<u8>, _> =
+        image::open(Path::new("./data/gg/iphone360_9144.jpg"))
+            .unwrap()
+            .to_rgb();
+
+    let vec_images = morphy(&lp, &imgbufdestination, &imgbufsource, 0.01);
+    make_gif(&vec_images);
+}
+
+fn make_gif(images: &Vec<image::ImageBuffer<image::Rgb<u8>, Vec<u8>>>) {
+    let mut image = File::create("./data/sample.gif").unwrap();
+    let (imgx, imgy) = images[0].dimensions();
+    let mut encoder = Encoder::new(&mut image, imgx as u16, imgy as u16, &[]).unwrap();
+    encoder.set(Repeat::Infinite).unwrap();
+    for state in images {
+        let mut new = state.clone();
+        let (imgx, imgy) = new.dimensions();
+        let mut ar = new.to_vec();
+        let mut frame = Frame::from_rgb(imgx as u16, imgy as u16, &mut ar[..]);
+        encoder.write_frame(&frame).unwrap();
+    }
+}
+
 fn main() {
-    warp_joker()
+    morphy_test()
 }

@@ -86,3 +86,44 @@ pub fn cross_dissolve<'a>(
     }
     cd_images
 }
+
+pub fn blending<'a>(
+    img_first: &'a image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+    img_second: &'a image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+    delta: f32,
+) -> image::ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+    let (imgx, imgy) = img_first.dimensions();
+    let mut temp_image: image::ImageBuffer<image::Rgb<u8>, _> = image::ImageBuffer::new(imgx, imgy);
+    for (x, y, pixel) in temp_image.enumerate_pixels_mut() {
+        let si_pixel = img_first.get_pixel(x, y);
+        let iaw_pixel = img_second.get_pixel(x, y);
+        let r = (si_pixel[0] as f32 + delta * (iaw_pixel[0] as f32 - si_pixel[0] as f32)) as u8;
+        let g = (si_pixel[1] as f32 + delta * (iaw_pixel[1] as f32 - si_pixel[1] as f32)) as u8;
+        let b = (si_pixel[2] as f32 + delta * (iaw_pixel[2] as f32 - si_pixel[2] as f32)) as u8;
+        *pixel = image::Rgb([r, g, b]);
+    }
+    temp_image
+}
+
+pub fn morphy<'a>(
+    line_pairs: &'a Vec<LinePair>,
+    img_first: &'a image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+    img_second: &'a image::ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+    delta: f32,
+) -> Vec<image::ImageBuffer<image::Rgb<u8>, Vec<u8>>> {
+    let iterations = (1.0 / delta) as i32;
+    let mut cd_images = Vec::<image::ImageBuffer<image::Rgb<u8>, Vec<u8>>>::new();
+    let inv_line_pairs = line_pairs.iter().map(|x| x.swap_lines()).collect();
+    for i in 0..=iterations {
+        let img_first_warp = warpy(&line_pairs, &img_first, &img_second, delta * i as f32);
+        let img_second_warp = warpy(
+            &inv_line_pairs,
+            &img_second,
+            &img_first,
+            delta * (iterations - i) as f32,
+        );
+        let img_blended = blending(&img_first_warp, &img_second_warp, delta * i as f32);
+        cd_images.push(img_blended);
+    }
+    cd_images
+}
